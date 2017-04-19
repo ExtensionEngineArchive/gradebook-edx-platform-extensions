@@ -3,7 +3,7 @@
 Run these tests @ Devstack:
     paver test_system -s lms --test_id=lms/djangoapps/gradebook/tests.py
 """
-from mock import MagicMock, patch
+from mock import patch
 import json
 from datetime import datetime
 
@@ -18,9 +18,7 @@ from courseware.tests.factories import StaffFactory
 from gradebook.models import StudentGradebook, StudentGradebookHistory
 from util.signals import course_deleted
 
-from edx_notifications.lib.consumer import get_notifications_count_for_user
-from edx_notifications.startup import initialize as initialize_notifications
-from edx_solutions_api_integration.test_utils import (
+from gradebook.test_utils import (
     CourseGradingMixin,
     SignalDisconnectTestMixin,
     make_non_atomic,
@@ -130,27 +128,6 @@ class GradebookTests(SignalDisconnectTestMixin, CourseGradingMixin, ModuleStoreT
 
     @patch.dict(settings.FEATURES, {
         'ALLOW_STUDENT_STATE_UPDATES_ON_CLOSED_COURSE': False,
-        'SIGNAL_ON_SCORE_CHANGED': True,
-        'ENABLE_NOTIFICATIONS': True
-    })
-    @make_non_atomic
-    def test_notifications_publishing(self):
-        initialize_notifications()
-
-        # assert user has no notifications
-        self.assertEqual(get_notifications_count_for_user(self.user.id), 0)
-
-        course = self.setup_course_with_grading()
-        module = self.get_module_for_user(self.user, course, course.homework_assignment)
-        grade_dict = {'value': 0.5, 'max_value': 1, 'user_id': self.user.id}
-        module.system.publish(module, 'grade', grade_dict)
-
-        # user should have had a notification published as he/her is now in the
-        # leaderboard
-        self.assertEqual(get_notifications_count_for_user(self.user.id), 1)
-
-    @patch.dict(settings.FEATURES, {
-        'ALLOW_STUDENT_STATE_UPDATES_ON_CLOSED_COURSE': False,
         'SIGNAL_ON_SCORE_CHANGED': True
     })
     @make_non_atomic
@@ -160,7 +137,6 @@ class GradebookTests(SignalDisconnectTestMixin, CourseGradingMixin, ModuleStoreT
             end=datetime(3000, 1, 1, tzinfo=UTC()),
         )
         self._assert_valid_gradebook_on_course(course)
-
 
     @patch.dict(settings.FEATURES, {
         'ALLOW_STUDENT_STATE_UPDATES_ON_CLOSED_COURSE': False,
