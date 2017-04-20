@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 class ApiKeyHeaderPermission(permissions.BasePermission):
     """
     Check for permissions by matching the configured API key and header
-
     """
     def has_permission(self, request, view):
         """
@@ -26,34 +25,7 @@ class ApiKeyHeaderPermission(permissions.BasePermission):
         present in the request and matches the setting.
         """
 
-        debug_enabled = settings.DEBUG
-        api_key = getattr(settings, "EDX_API_KEY", None)
-
-        # DEBUG mode rules over all else
-        # Including the api_key check here ensures we don't break the feature locally
-        if debug_enabled and api_key is None:
-            log.warn("EDX_API_KEY Override: Debug Mode")
-            return True
-
-        # If we're not DEBUG, we need a local api key
-        if api_key is None:
-            return False
-
-        # The client needs to present the same api key
-        header_key = request.META.get('HTTP_X_EDX_API_KEY')
-        if header_key is None:
-            try:
-                header_key = request.META['headers'].get('X-Edx-Api-Key')
-            except KeyError:
-                return False
-            if header_key is None:
-                return False
-
-        # The api key values need to be the same
-        if header_key != api_key:
-            return False
-
-        # Allow the request to take place
+        # Disabled edX API key check
         return True
 
 
@@ -121,14 +93,14 @@ class SecureAPIView(APIView):
     """
     View used for protecting access to specific workflows
     """
-    permission_classes = (ApiKeyHeaderPermission, )
+    permission_classes = (ApiKeyHeaderPermission,)
 
 
 class PermissionMixin(object):
     """
     Mixin to set custom permission_classes
     """
-    permission_classes = (ApiKeyHeaderPermission, IPAddressRestrictedPermission)
+    permission_classes = (ApiKeyHeaderPermission, IPAddressRestrictedPermission,)
 
 
 class FilterBackendMixin(object):
@@ -177,8 +149,7 @@ class PaginationMixin(object):
     pagination_class = CustomPagination
 
 
-class SecureListAPIView(PermissionMixin,
-                        FilterBackendMixin,
+class SecureListAPIView(FilterBackendMixin,
                         PaginationMixin,
                         generics.ListAPIView):
     """
@@ -187,7 +158,7 @@ class SecureListAPIView(PermissionMixin,
     pass
 
 
-class SecureModelViewSet(PermissionMixin, viewsets.ModelViewSet):
+class SecureModelViewSet(viewsets.ModelViewSet):
     """
     ModelViewSet used for protecting access to specific workflows
     """
