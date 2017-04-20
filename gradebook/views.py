@@ -11,8 +11,6 @@ from django.db.models import F
 from rest_framework import status
 from rest_framework.response import Response
 
-from lms.lib.comment_client.thread import get_course_thread_stats
-from lms.lib.comment_client.utils import CommentClientRequestError
 from courseware.models import StudentModule
 from progress.models import StudentProgress, CourseModuleCompletion
 from student.models import CourseEnrollment
@@ -115,7 +113,6 @@ class CoursesMetrics(SecureAPIView):
         if not course_exists(request, request.user, course_id):
             return Response({}, status=status.HTTP_404_NOT_FOUND)
         course_descriptor, course_key, course_content = get_course(request, request.user, course_id)  # pylint: disable=W0612
-        slash_course_id = get_course_key(course_id, slashseparated=True)
         exclude_users = get_aggregate_exclusion_user_ids(course_key)
         users_enrolled_qs = CourseEnrollment.objects.users_enrolled_in(course_key).exclude(id__in=exclude_users)
         organization = request.query_params.get('organization', None)
@@ -156,14 +153,6 @@ class CoursesMetrics(SecureAPIView):
             )
             data['users_completed'] = users_completed
 
-        if 'thread_stats' in metrics_required:
-            try:
-                data['thread_stats'] = get_course_thread_stats(slash_course_id)
-            except CommentClientRequestError, e:  # pylint: disable=C0103
-                data = {
-                    "err_msg": str(e)
-                }
-                return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(data, status=status.HTTP_200_OK)
 
 
