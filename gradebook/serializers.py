@@ -16,8 +16,6 @@ class CourseLeadersSerializer(serializers.Serializer):
     """ Serializer for course leaderboard """
     id = serializers.IntegerField(source='user__id')  # pylint: disable=invalid-name
     username = serializers.CharField(source='user__username')
-    title = serializers.CharField(source='user__profile__title')
-    avatar_url = serializers.CharField(source='user__profile__avatar_url')
     # Percentage grade (versus letter grade)
     grade = serializers.FloatField()
     recorded = serializers.DateTimeField(source='modified')
@@ -27,8 +25,6 @@ class CourseSocialLeadersSerializer(serializers.Serializer):
     """ Serializer for course leaderboard """
     id = serializers.IntegerField(source='user__id')  # pylint: disable=invalid-name
     username = serializers.CharField(source='user__username')
-    title = serializers.CharField(source='user__profile__title')
-    avatar_url = serializers.CharField(source='user__profile__avatar_url')
     score = serializers.IntegerField()
     recorded = serializers.DateTimeField(source='modified')
 
@@ -37,8 +33,6 @@ class CourseCompletionsLeadersSerializer(serializers.Serializer):
     """ Serializer for course completions leaderboard """
     id = serializers.IntegerField(source='user__id')  # pylint: disable=invalid-name
     username = serializers.CharField(source='user__username')
-    title = serializers.CharField(source='user__profile__title')
-    avatar_url = serializers.CharField(source='user__profile__avatar_url')
     completions = serializers.SerializerMethodField('get_completion_percentage')
 
     def get_completion_percentage(self, obj):

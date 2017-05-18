@@ -49,10 +49,10 @@ class StudentGradebook(models.Model):
         data = {
             'course_avg': 0.873,
             'queryset': [
-                {'id': 123, 'username': 'testuser1', 'title', 'Engineer', 'avatar_url': 'http://gravatar.com/123/', 'grade': 0.92, 'created': '2014-01-15 06:27:54'},
-                {'id': 983, 'username': 'testuser2', 'title', 'Analyst', 'avatar_url': 'http://gravatar.com/983/', 'grade': 0.91, 'created': '2014-06-27 01:15:54'},
-                {'id': 246, 'username': 'testuser3', 'title', 'Product Owner', 'avatar_url': 'http://gravatar.com/246/', 'grade': 0.90, 'created': '2014-03-19 04:54:54'},
-                {'id': 357, 'username': 'testuser4', 'title', 'Director', 'avatar_url': 'http://gravatar.com/357/', 'grade': 0.89, 'created': '2014-12-01 08:38:54'},
+                {'id': 123, 'username': 'testuser1', 'grade': 0.92, 'created': '2014-01-15 06:27:54'},
+                {'id': 983, 'username': 'testuser2', 'grade': 0.91, 'created': '2014-06-27 01:15:54'},
+                {'id': 246, 'username': 'testuser3', 'grade': 0.90, 'created': '2014-03-19 04:54:54'},
+                {'id': 357, 'username': 'testuser4', 'grade': 0.89, 'created': '2014-12-01 08:38:54'},
             ]
             ### IF USER ID SPECIFIED (in this case user_id=246) ###
             'user_position': 4,
@@ -103,8 +103,6 @@ class StudentGradebook(models.Model):
                 data['queryset'] = queryset.values(
                     'user__id',
                     'user__username',
-                    'user__profile__title',
-                    'user__profile__avatar_url',
                     'grade',
                     'modified')\
                     .order_by('-grade', 'modified')[:count]
