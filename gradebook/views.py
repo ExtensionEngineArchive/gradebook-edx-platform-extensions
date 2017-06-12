@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import Count, Max, Min
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import F
@@ -30,67 +31,6 @@ from gradebook.serializers import GradeSerializer, CourseLeadersSerializer
 
 
 log = logging.getLogger(__name__)
-
-
-class CoursesMetricsGradesList(SecureListAPIView):
-    """
-    ### The CoursesMetricsGradesList view allows clients to retrieve a list of grades for the specified Course
-    - URI: ```/api/courses/{course_id}/grades/```
-    - GET: Returns a JSON representation (array) of the set of grade objects
-    ### Use Cases/Notes:
-    * Example: Display a graph of all of the grades awarded for a given course
-    """
-
-    def get(self, request, course_id):  # pylint: disable=W0221
-        """
-        GET /api/courses/{course_id}/metrics/grades?user_ids=1,2
-        """
-        if not course_exists(request, request.user, course_id):
-            return Response({}, status=status.HTTP_404_NOT_FOUND)
-        course_key = get_course_key(course_id)
-        exclude_users = get_aggregate_exclusion_user_ids(course_key)
-        queryset = StudentGradebook.objects.filter(course_id__exact=course_key,
-                                                   user__is_active=True,
-                                                   user__courseenrollment__is_active=True,
-                                                   user__courseenrollment__course_id__exact=course_key)\
-            .exclude(user__in=exclude_users)
-        user_ids = get_ids_from_list_param(self.request, 'user_id')
-        if user_ids:
-            queryset = queryset.filter(user__in=user_ids)
-
-        group_ids = get_ids_from_list_param(self.request, 'groups')
-        if group_ids:
-            queryset = queryset.filter(user__groups__in=group_ids).distinct()
-
-        sum_of_grades = sum([gradebook.grade for gradebook in queryset])
-        queryset_grade_avg = sum_of_grades / len(queryset) if len(queryset) > 0 else 0
-        queryset_grade_count = len(queryset)
-        queryset_grade_max = queryset.aggregate(Max('grade'))
-        queryset_grade_min = queryset.aggregate(Min('grade'))
-
-        course_metrics = StudentGradebook.generate_leaderboard(course_key,
-                                                               group_ids=group_ids,
-                                                               exclude_users=exclude_users)
-
-        response_data = {}
-        base_uri = generate_base_uri(request)
-        response_data['uri'] = base_uri
-
-        response_data['grade_average'] = queryset_grade_avg
-        response_data['grade_count'] = queryset_grade_count
-        response_data['grade_maximum'] = queryset_grade_max['grade__max']
-        response_data['grade_minimum'] = queryset_grade_min['grade__min']
-
-        response_data['course_grade_average'] = course_metrics['course_avg']
-        response_data['course_grade_maximum'] = course_metrics['course_max']
-        response_data['course_grade_minimum'] = course_metrics['course_min']
-        response_data['course_grade_count'] = course_metrics['course_count']
-
-        response_data['grades'] = []
-        for row in queryset:
-            serializer = GradeSerializer(row)
-            response_data['grades'].append(serializer.data)  # pylint: disable=E1101
-        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class CoursesMetrics(SecureAPIView):
@@ -152,6 +92,35 @@ class CoursesMetrics(SecureAPIView):
                 course_key, exclude_users=exclude_users, org_ids=org_ids, group_ids=group_ids
             )
             data['users_completed'] = users_completed
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class CoursesUserMetrics(SecureAPIView):
+    """
+    ### The CoursesUserMetrics view allows clients to retrieve a list of Metrics for the specified Course and User
+    - URI: ```/api/courses/{course_id}/user-metrics/{username}```
+    - GET: Returns a JSON representation (array) of the set of user metrics
+    ### Use Cases/Notes:
+    * Example: Display number of modules the user has completed
+    """
+
+    def get(self, request, course_id, username):  # pylint: disable=W0613
+        """
+        GET /api/courses/{course_id}/user-metrics/{username}
+        """
+        if not course_exists(request, request.user, course_id) or not User.objects.filter(username=username).exists():
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.username != username and not request.user.is_staff:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+        course_descriptor, course_key, course_content = get_course(request, request.user, course_id)  # pylint: disable=W0612
+        modules_completed = StudentProgress.get_total_completions_for_user(course_key, username)
+        data = {
+            'grade_cutoffs': course_descriptor.grading_policy['GRADE_CUTOFFS'],
+            'modules_completed': modules_completed,
+        }
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -287,6 +256,67 @@ class CoursesTimeSeriesMetrics(SecureAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+class CoursesMetricsGradesList(SecureListAPIView):
+    """
+    ### The CoursesMetricsGradesList view allows clients to retrieve a list of grades for the specified Course
+    - URI: ```/api/courses/{course_id}/grades/```
+    - GET: Returns a JSON representation (array) of the set of grade objects
+    ### Use Cases/Notes:
+    * Example: Display a graph of all of the grades awarded for a given course
+    """
+
+    def get(self, request, course_id):  # pylint: disable=W0221
+        """
+        GET /api/courses/{course_id}/metrics/grades?user_ids=1,2
+        """
+        if not course_exists(request, request.user, course_id):
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
+        course_key = get_course_key(course_id)
+        exclude_users = get_aggregate_exclusion_user_ids(course_key)
+        queryset = StudentGradebook.objects.filter(course_id__exact=course_key,
+                                                   user__is_active=True,
+                                                   user__courseenrollment__is_active=True,
+                                                   user__courseenrollment__course_id__exact=course_key)\
+            .exclude(user__in=exclude_users)
+        user_ids = get_ids_from_list_param(self.request, 'user_id')
+        if user_ids:
+            queryset = queryset.filter(user__in=user_ids)
+
+        group_ids = get_ids_from_list_param(self.request, 'groups')
+        if group_ids:
+            queryset = queryset.filter(user__groups__in=group_ids).distinct()
+
+        sum_of_grades = sum([gradebook.grade for gradebook in queryset])
+        queryset_grade_avg = sum_of_grades / len(queryset) if len(queryset) > 0 else 0
+        queryset_grade_count = len(queryset)
+        queryset_grade_max = queryset.aggregate(Max('grade'))
+        queryset_grade_min = queryset.aggregate(Min('grade'))
+
+        course_metrics = StudentGradebook.generate_leaderboard(course_key,
+                                                               group_ids=group_ids,
+                                                               exclude_users=exclude_users)
+
+        response_data = {}
+        base_uri = generate_base_uri(request)
+        response_data['uri'] = base_uri
+
+        response_data['grade_average'] = queryset_grade_avg
+        response_data['grade_count'] = queryset_grade_count
+        response_data['grade_maximum'] = queryset_grade_max['grade__max']
+        response_data['grade_minimum'] = queryset_grade_min['grade__min']
+
+        response_data['course_grade_average'] = course_metrics['course_avg']
+        response_data['course_grade_maximum'] = course_metrics['course_max']
+        response_data['course_grade_minimum'] = course_metrics['course_min']
+        response_data['course_grade_count'] = course_metrics['course_count']
+
+        response_data['grades'] = []
+        for row in queryset:
+            serializer = GradeSerializer(row)
+            response_data['grades'].append(serializer.data)  # pylint: disable=E1101
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class CoursesMetricsGradesLeadersList(SecureListAPIView):
