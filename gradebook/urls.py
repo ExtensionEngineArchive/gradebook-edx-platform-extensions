@@ -13,6 +13,7 @@ USERNAME_PATTERN = settings.USERNAME_PATTERN
 
 urlpatterns = patterns(
     '',
+    url(r'^{}/gradebook/*$'.format(COURSE_ID_PATTERN), courses_views.CourseGradeBook.as_view(), name='course-gradebook'),
     url(r'^{}/metrics/*$'.format(COURSE_ID_PATTERN), courses_views.CoursesMetrics.as_view(), name='course-metrics'),
     url(r'^{}/user-metrics/{}$'.format(COURSE_ID_PATTERN, USERNAME_PATTERN),
         courses_views.CoursesUserMetrics.as_view(), name='course-user-metrics'),
