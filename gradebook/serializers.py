@@ -61,10 +61,10 @@ class GradeSummarySerializer(serializers.Serializer):
 
 class StudentGradebookEntrySerializer(serializers.Serializer):
     """ Serializer for student gradebook entry """
-    id = serializers.IntegerField()
     email = serializers.CharField()
     full_name = serializers.CharField()
     grade_summary = GradeSummarySerializer()
+    user_id = serializers.IntegerField()
     username = serializers.CharField()
 
 

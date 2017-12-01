@@ -430,7 +430,7 @@ class CourseGradeBook(generics.ListAPIView):
                 gradebook_entry = {
                     'username': student.username,
                     'full_name': student.get_full_name(),
-                    'id': student.id,
+                    'user_id': student.id,
                     'email': student.email,
                     # NDPD-631, NDPD-641: Pass the graded_sections here, again via an optional parameter
                     'grade_summary': student_grades(
