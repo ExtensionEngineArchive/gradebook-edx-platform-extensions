@@ -24,6 +24,7 @@ class SectionBreakdownSerializer(serializers.Serializer):
     detail = serializers.CharField()
     displayed_value = serializers.CharField()
     grade_description = serializers.CharField()
+    is_manually_graded = serializers.SerializerMethodField()
     label = serializers.CharField()
     letter_grade = serializers.CharField()
     module_id = serializers.SerializerMethodField()
@@ -34,8 +35,11 @@ class SectionBreakdownSerializer(serializers.Serializer):
     def get_chapter_name(self, data):
         return data.get('chapter_name', '')
 
+    def get_is_manually_graded(self, data):
+        return data.get('is_manually_graded', False)
+
     def get_module_id(self, data):
-        return str(data.get('module_id', ''))
+        return str(data.get('module_id', data.get('block_id', '')))
 
 
 class GradeSummarySerializer(serializers.Serializer):
@@ -61,9 +65,11 @@ class GradeSummarySerializer(serializers.Serializer):
 
 class StudentGradebookEntrySerializer(serializers.Serializer):
     """ Serializer for student gradebook entry """
+    course_id = serializers.CharField()
     email = serializers.CharField()
     full_name = serializers.CharField()
     grade_summary = GradeSummarySerializer()
+    progress_page_url = serializers.CharField()
     user_id = serializers.IntegerField()
     username = serializers.CharField()
 
