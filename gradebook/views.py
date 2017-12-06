@@ -2,6 +2,7 @@
 
 import logging
 
+from django.core.urlresolvers import reverse
 from django.db import transaction
 
 from opaque_keys.edx.keys import CourseKey
@@ -71,11 +72,17 @@ class CourseGradeBook(generics.ListAPIView):
             greatest_student_index = None
 
             for index, student in enumerate(students):
+                course_id = course.id.to_deprecated_string()
                 gradebook_entry = {
                     'username': student.username,
                     'full_name': student.get_full_name(),
                     'user_id': student.id,
                     'email': student.email,
+                    'course_id': course_id,
+                    'progress_page_url': reverse(
+                        'student_progress', 
+                        kwargs=dict(course_id=course_id, student_id=student.id)
+                    ),
                     # NDPD-631, NDPD-641: Pass the graded_sections here, again via an optional parameter
                     'grade_summary': student_grades(
                         student, 
