@@ -6,12 +6,10 @@ import json
 from django.db import transaction
 from django.utils.decorators import method_decorator
 
-from xmodule.modulestore import EdxJSONEncoder
-from xmodule.modulestore.django import modulestore
-from course_blocks.api import get_course_blocks
-from courseware import grades
 from courseware.courses import get_course
 from gradebook.models import StudentGradebook
+from xmodule.modulestore import EdxJSONEncoder
+from xmodule.modulestore.django import modulestore
 
 
 @method_decorator(transaction.non_atomic_requests)
