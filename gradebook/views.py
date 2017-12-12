@@ -8,8 +8,12 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count, F, Max, Min
 from django.utils.translation import ugettext_lazy as _
+from opaque_keys.edx.keys import CourseKey
+from rest_framework import generics, status
+from rest_framework.response import Response
 
-from course_blocks.api import get_course_blocks
+from courseware.access import get_enrolled_non_staff_students
+from courseware.courses import get_course_with_access
 from courseware.models import StudentModule
 from gradebook.api_utils import (
     css_param_to_list,
@@ -23,11 +27,8 @@ from gradebook.models import StudentGradebook
 from gradebook.pagination import GradebookPagination
 from gradebook.permissions import SecureAPIView, SecureListAPIView
 from gradebook.serializers import CourseLeadersSerializer, GradeSerializer, StudentGradebookEntrySerializer
-from gradebook.utils import get_params_for_grade_summaries, get_updated_grade_summaries
-from instructor.views.api import require_level
+from instructor.offline_gradecalc import prepare_gradebook
 from progress.models import CourseModuleCompletion, StudentProgress
-from rest_framework import generics, status
-from rest_framework.response import Response
 from student.models import CourseEnrollment
 from student.roles import get_aggregate_exclusion_user_ids
 from xmodule.modulestore.django import modulestore
@@ -382,17 +383,14 @@ class CourseGradeBook(generics.ListAPIView):
         return super(CourseGradeBook, self).dispatch(request, *args, **kwargs)
 
     def list(self, request, course_id):
-        paginator = self.pagination_class()
+        course_key = CourseKey.from_string(course_id)
+        course = get_course_with_access(request.user, 'staff', course_key, depth=None)
+        non_staff_students = get_enrolled_non_staff_students(course, course_key)
 
-        grade_summaries_params = get_params_for_grade_summaries(request.user, course_id)
-        page = paginator.paginate_queryset(grade_summaries_params['non_staff_students'], request)
-        grade_summaries = get_updated_grade_summaries(
-            request,
-            page,
-            grade_summaries_params['course'],
-            grade_summaries_params['course_structure'],
-            grade_summaries_params['graded_sections'],
-        )
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(non_staff_students, request)
+
+        grade_summaries = prepare_gradebook(course, page, request.user)
 
         serializer = StudentGradebookEntrySerializer(grade_summaries, many=True)
 
