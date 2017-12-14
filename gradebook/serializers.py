@@ -46,7 +46,7 @@ class GradeSummarySerializer(serializers.Serializer):
     """ Serializer for student grade summary """
     current_letter_grade = serializers.CharField()
     current_percent = serializers.CharField()
-    grade = serializers.IntegerField()
+    grade = serializers.CharField()
     grade_breakdown = serializers.ListField()
     manual_graded_per_policy = serializers.ListField()
     manual_graded_total_count = serializers.IntegerField()
