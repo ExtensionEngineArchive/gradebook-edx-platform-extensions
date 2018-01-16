@@ -8,22 +8,29 @@ from openedx.core.djangoapps.content.course_overviews.models import CourseOvervi
 
 
 class ScoreSerializer(serializers.Serializer):
+    auto_grade = serializers.SerializerMethodField()
     earned = serializers.FloatField()
     graded = serializers.BooleanField()
     module_id = serializers.SerializerMethodField()
     possible = serializers.FloatField()
     section = serializers.CharField()
 
+    def get_auto_grade(self, data):
+        return getattr(data, 'auto_grade', None)
+
     def get_module_id(self, data):
         return str(data.module_id)
 
 
 class SectionBreakdownSerializer(serializers.Serializer):
+    auto_grade = serializers.SerializerMethodField()
     category = serializers.CharField()
     chapter_name = serializers.SerializerMethodField()
+    comment = serializers.SerializerMethodField()
     detail = serializers.CharField()
     displayed_value = serializers.CharField()
     grade_description = serializers.CharField()
+    is_average = serializers.SerializerMethodField()
     is_manually_graded = serializers.SerializerMethodField()
     label = serializers.CharField()
     letter_grade = serializers.CharField()
@@ -31,15 +38,29 @@ class SectionBreakdownSerializer(serializers.Serializer):
     percent = serializers.CharField()
     score_earned = serializers.CharField()
     score_possible = serializers.CharField()
+    subsection_name = serializers.SerializerMethodField()
+
+
+    def get_auto_grade(self, data):
+        return data.get('auto_grade')
 
     def get_chapter_name(self, data):
         return data.get('chapter_name', '')
+
+    def get_comment(self, data):
+        return data.get('comment', '')
+
+    def get_is_average(self, data):
+        return data.get('is_average', False)
 
     def get_is_manually_graded(self, data):
         return data.get('is_manually_graded', False)
 
     def get_module_id(self, data):
         return str(data.get('module_id', data.get('block_id', '')))
+
+    def get_subsection_name(self, data):
+        return data.get('subsection_name', '')
 
 
 class GradeSummarySerializer(serializers.Serializer):
