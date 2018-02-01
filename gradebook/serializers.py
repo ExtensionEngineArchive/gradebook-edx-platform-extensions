@@ -23,6 +23,7 @@ class ScoreSerializer(serializers.Serializer):
 
 
 class SectionBreakdownSerializer(serializers.Serializer):
+    are_grades_published = serializers.SerializerMethodField()
     auto_grade = serializers.SerializerMethodField()
     category = serializers.CharField()
     chapter_name = serializers.SerializerMethodField()
@@ -40,6 +41,10 @@ class SectionBreakdownSerializer(serializers.Serializer):
     score_possible = serializers.CharField()
     subsection_name = serializers.SerializerMethodField()
 
+    def get_are_grades_published(self, data):
+        if self.get_is_manually_graded(data):
+            return data.get('are_grades_published', False)
+        return True
 
     def get_auto_grade(self, data):
         return data.get('auto_grade')
