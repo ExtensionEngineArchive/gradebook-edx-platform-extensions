@@ -39,6 +39,7 @@ class SectionBreakdownSerializer(serializers.Serializer):
     percent = serializers.CharField()
     score_earned = serializers.CharField()
     score_possible = serializers.CharField()
+    section_block_id = serializers.SerializerMethodField()
     subsection_name = serializers.SerializerMethodField()
 
     def get_are_grades_published(self, data):
@@ -63,6 +64,9 @@ class SectionBreakdownSerializer(serializers.Serializer):
 
     def get_module_id(self, data):
         return str(data.get('module_id', data.get('block_id', '')))
+
+    def get_section_block_id(self, data):
+        return data.get('section_block_id', '')
 
     def get_subsection_name(self, data):
         return data.get('subsection_name', '')
