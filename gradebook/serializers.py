@@ -31,6 +31,7 @@ class SectionBreakdownSerializer(serializers.Serializer):
     detail = serializers.CharField()
     displayed_value = serializers.CharField()
     grade_description = serializers.CharField()
+    is_ag = serializers.SerializerMethodField()
     is_average = serializers.SerializerMethodField()
     is_manually_graded = serializers.SerializerMethodField()
     label = serializers.CharField()
@@ -55,6 +56,9 @@ class SectionBreakdownSerializer(serializers.Serializer):
 
     def get_comment(self, data):
         return data.get('comment', '')
+
+    def get_is_ag(self, data):
+        return data.get('is_ag', False)
 
     def get_is_average(self, data):
         return data.get('is_average', False)
