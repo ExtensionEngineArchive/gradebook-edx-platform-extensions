@@ -9,8 +9,7 @@ from rest_framework import generics
 
 from courseware.access import get_enrolled_non_staff_students
 from courseware.courses import get_course_with_access
-from instructor.offline_gradecalc import student_grades
-from instructor.views.gradebook_api import get_letter_grade, manual_grading_xblock_patcher
+from instructor.views.gradebook_api import prepare_gradebook
 from xmodule.modulestore.django import modulestore
 
 from gradebook.pagination import GradebookPagination
@@ -19,7 +18,6 @@ from gradebook.serializers import StudentGradebookEntrySerializer
 log = logging.getLogger(__name__)
 
 
-# NDPD-737: Platform cleanup
 class CourseGradeBook(generics.ListAPIView):
     """
     View to list the grade summary of all users enrolled in the course.
@@ -38,7 +36,11 @@ class CourseGradeBook(generics.ListAPIView):
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(non_staff_students, request)
 
-        grade_summaries = prepare_gradebook(course, page, request.user)
+        grade_summaries = prepare_gradebook(course, page)
+
+        print '#' * 10
+        print grade_summaries
+        print '#' * 10
 
         serializer = StudentGradebookEntrySerializer(grade_summaries, many=True)
 

@@ -29,17 +29,17 @@ class SectionBreakdownSerializer(serializers.Serializer):
     chapter_name = serializers.SerializerMethodField()
     comment = serializers.SerializerMethodField()
     detail = serializers.CharField()
-    displayed_value = serializers.CharField()
-    grade_description = serializers.CharField()
+    # displayed_value = serializers.CharField()
+    # grade_description = serializers.CharField()
     is_ag = serializers.SerializerMethodField()
     is_average = serializers.SerializerMethodField()
     is_manually_graded = serializers.SerializerMethodField()
     label = serializers.CharField()
-    letter_grade = serializers.CharField()
+    # letter_grade = serializers.CharField()
     module_id = serializers.SerializerMethodField()
     percent = serializers.CharField()
-    score_earned = serializers.CharField()
-    score_possible = serializers.CharField()
+    # score_earned = serializers.CharField()
+    # score_possible = serializers.CharField()
     section_block_id = serializers.SerializerMethodField()
     subsection_name = serializers.SerializerMethodField()
 
@@ -78,23 +78,16 @@ class SectionBreakdownSerializer(serializers.Serializer):
 
 class GradeSummarySerializer(serializers.Serializer):
     """ Serializer for student grade summary """
-    current_letter_grade = serializers.CharField()
+    # current_letter_grade = serializers.CharField()
     current_percent = serializers.CharField()
     grade = serializers.CharField()
     grade_breakdown = serializers.ListField()
-    manual_graded_per_policy = serializers.ListField()
-    manual_graded_total_count = serializers.IntegerField()
+    # manual_graded_per_policy = serializers.ListField()
+    # manual_graded_total_count = serializers.IntegerField()
     percent = serializers.CharField()
-    raw_scores = ScoreSerializer(many=True)
     section_breakdown = SectionBreakdownSerializer(many=True)
-    total_letter_grade = serializers.CharField()
-    totaled_scores = serializers.SerializerMethodField()
-
-    def get_totaled_scores(self, data):
-        for section in data['totaled_scores']:
-            yield {
-                section: ScoreSerializer(data['totaled_scores'][section], many=True).data
-            }
+    # total_letter_grade = serializers.CharField()
+    # totaled_scores = serializers.SerializerMethodField()
 
 
 class StudentGradebookEntrySerializer(serializers.Serializer):
