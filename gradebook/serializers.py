@@ -29,8 +29,8 @@ class SectionBreakdownSerializer(serializers.Serializer):
     chapter_name = serializers.SerializerMethodField()
     comment = serializers.SerializerMethodField()
     detail = serializers.CharField()
-    # displayed_value = serializers.CharField()
-    # grade_description = serializers.CharField()
+    displayed_value = serializers.CharField()
+    grade_description = serializers.SerializerMethodField()
     is_ag = serializers.SerializerMethodField()
     is_average = serializers.SerializerMethodField()
     is_manually_graded = serializers.SerializerMethodField()
@@ -38,8 +38,8 @@ class SectionBreakdownSerializer(serializers.Serializer):
     # letter_grade = serializers.CharField()
     module_id = serializers.SerializerMethodField()
     percent = serializers.CharField()
-    # score_earned = serializers.CharField()
-    # score_possible = serializers.CharField()
+    score_earned = serializers.CharField()
+    score_possible = serializers.CharField()
     section_block_id = serializers.SerializerMethodField()
     subsection_name = serializers.SerializerMethodField()
 
@@ -56,6 +56,15 @@ class SectionBreakdownSerializer(serializers.Serializer):
 
     def get_comment(self, data):
         return data.get('comment', '')
+
+    def get_grade_description(self, data):
+        score_earned = data.get(score_earned)
+        score_possible = data.get(score_possible)
+
+        try:
+            return '({:0.2f}/{:0.2f})'.format(float(score_earned), float(score_possible))
+        except:
+            return '({}/{})'.format(score_earned, score_possible)
 
     def get_is_ag(self, data):
         return data.get('is_ag', False)

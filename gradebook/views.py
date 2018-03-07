@@ -37,11 +37,6 @@ class CourseGradeBook(generics.ListAPIView):
         page = paginator.paginate_queryset(non_staff_students, request)
 
         grade_summaries = prepare_gradebook(course, page)
-
-        print '#' * 10
-        print grade_summaries
-        print '#' * 10
-
         serializer = StudentGradebookEntrySerializer(grade_summaries, many=True)
 
         return paginator.get_paginated_response(serializer.data)
