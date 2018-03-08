@@ -31,12 +31,17 @@ class CourseGradeBook(generics.ListAPIView):
     def list(self, request, course_id):
         course_key = CourseKey.from_string(course_id)
         course = get_course_with_access(request.user, 'staff', course_key, depth=None)
+        course_grades = sorted(course.grade_cutoffs.items(), key=lambda i: i[1], reverse=True)
         non_staff_students = get_enrolled_non_staff_students(course, course_key)
 
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(non_staff_students, request)
 
         grade_summaries = prepare_gradebook(course, page)
-        serializer = StudentGradebookEntrySerializer(grade_summaries, many=True)
+        serializer = StudentGradebookEntrySerializer(
+            grade_summaries, 
+            context={'course_grades': course_grades},
+            many=True
+        )
 
         return paginator.get_paginated_response(serializer.data)
