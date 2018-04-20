@@ -50,7 +50,10 @@ class SectionBreakdownSerializer(serializers.Serializer):
         return True
 
     def get_auto_grade(self, data):
-        return data.get('auto_grade')
+        auto_grade = data.get('auto_grade')
+        if auto_grade:
+            return '{earned}/{possible}'.format(earned=auto_grade.earned, possible=auto_grade.possible)
+        return None
 
     def get_chapter_name(self, data):
         return data.get('chapter_name', '')
@@ -83,7 +86,7 @@ class SectionBreakdownSerializer(serializers.Serializer):
         return None
 
     def get_module_id(self, data):
-        return str(data.get('module_id', data.get('block_id', '')))
+        return str(data.get('block_id', ''))
 
     def get_section_block_id(self, data):
         return data.get('section_block_id', '')
