@@ -8,7 +8,7 @@ from rest_framework import permissions, generics, filters, pagination, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from gradebook.api_models import APIUser as User
+from gradebook.models import APIUser as User
 
 log = logging.getLogger(__name__)
 
